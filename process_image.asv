@@ -1,0 +1,69 @@
+ind = 1586;
+sample_id = samples(ind).id;
+style_ind = find(strcmp(samples(ind).style_name,names));
+
+seg_file_path = [seg_src_path num2str(sample_id) '.png'];
+seg_img = imread(seg_file_path);
+seg_img = seg_img(:, :, 1);
+seg_img = seg_img + 1; %[0;55] -> [1;56]
+
+tmp_features = features(ind, :);
+
+p = zeros(n_parts, 1);
+[tmp_features_normalized, ~, ~] = normalize_features_fn(tmp_features, train_feature_avgs, train_feature_stds);
+for i=1:n_parts
+    tmp_features_normalized_part = tmp_features_normalized(1 + part_features_len * (i-1):part_features_len * i);
+    tmp_pred = - models{style_ind}.w(1 + part_features_len * (i-1):part_features_len * i) * tmp_features_normalized_part';
+    p(i) = 1 / (1 + exp(tmp_pred));
+end
+
+x_patch_halfdim = scaleVal(ind, 1) * patch_halfdim;
+y_patch_halfdim = scaleVal(ind, 2) * patch_halfdim;
+
+tmp_patch_acc = NaN([size(seg_img) n_parts]);
+for i=1:n_parts
+    tmpp = p(i);
+    tmp_center = coordinates([(2*ind)-1 2*ind], i);
+
+    y_a = max(round(tmp_center(2)-y_patch_halfdim), 1);
+    x_a = max(round(tmp_center(1)-x_patch_halfdim), 1);
+    y_b = min(round(tmp_center(2)+y_patch_halfdim-1), size(seg_img, 1));
+    x_b = min(round(tmp_center(1)+x_patch_halfdim-1), size(seg_img, 2));
+
+    tmp_patch_acc(y_a:y_b,x_a:x_b,i) = tmpp;
+end
+
+part_scores_map = nanmean(tmp_patch_acc, 3);
+part_scores_map(isnan(part_scores_map)) = 0.5;
+
+item_scores_map = ones(size(seg_img)).*0.5;
+for i=1:n_items
+    item_i_pixels = seg_img == i;
+    item_scores_map(item_i_pixels) = mean(part_scores_map(item_i_pixels));
+end
+
+f = figure;
+if sets{style_i}.test.labels(sample_i) == 1
+    posneg = 'Positive sample';
+else
+    posneg = 'Negative sample';
+end
+subplot(1,3,1);
+imshow(samples(ind).image)
+hold on
+plot(coordinates([(2*ind)-1 2*ind], :), 'rx');
+hold off
+subplot(1,3,2);
+imagesc(item_scores_maps)
+title([names{style_ind} ' ' posneg])
+colorbar
+subplot(1,3,3);
+imagesc(part_scores_maps{sample_i})
+colorbar
+
+
+
+
+
+
+
