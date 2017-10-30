@@ -1,79 +1,79 @@
-% if ~exist('features')
-%     %load features_stylenet.mat
-%     load sets_p.mat
-%     features = hdf5read('features_preppycheckered.h5', '/features');
-%     features = double(features');
-%     sets_p{3}.train.features = features;
-%     sets_p{3}.test = sets_p{3}.train;
-% end
-% 
-% train_perc = 0.9;
-% delta = 0.2;
-% names = {'Preppy'};
-% 
-% sets = sets_p(3);
-% 
-% %% train models
-% models = cell(length(names), 1);
-% for i=1:length(names)
-%     names{i}
-%     % [normalized_style_train_features, ~, ~] = normalize_features_fn(sets{i}.train.features, train_feature_avgs, train_feature_stds);
-%     C = train(sets{i}.train.labels, sparse(sets{i}.train.features), '-s 0 -C -v 5');
-%     models{i} = train(sets{i}.train.labels(3:end), sparse(sets{i}.train.features(3:end, :)), ['-s 0 -c ', num2str(C(1)), '']);
-% end
-% 
-% %%
-% covered_list = [];
-% covered_stylesample_inds = [];
-% number_of_samples = -1; %n or -1
-% for style_i=1:length(names)
-%     tmp_testset = sets{style_i}.test.samples;
-%     tmp_labels = sets{style_i}.test.labels;
-%     checkered_inds = find(tmp_labels == 1)';
-%     non_checkered_inds = find(tmp_labels == 2)';
-% %     covered_list = [covered_list; tmp_testset(1).id; tmp_testset(end).id];
-% %     covered_list = [covered_list; tmp_testset(1).id; tmp_testset(2).id; tmp_testset(end - 1).id; tmp_testset(end).id];
-%     if number_of_samples < 0
-%         covered_list = [covered_list; [tmp_testset(:).id]'];
-%         covered_stylesample_inds = [covered_stylesample_inds; [ones(size(tmp_labels,1), 1).*style_i [1:size(tmp_testset, 1)]' tmp_labels]];
-%     else
-%         for i=checkered_inds(1:number_of_samples)
-%             covered_list = [covered_list; tmp_testset(i).id];
-%         end
-%         for i=non_checkered_inds(1:number_of_samples)
-%             covered_list = [covered_list; tmp_testset(i).id];
-%         end
-%         for i=checkered_inds(1:number_of_samples)
-%             covered_stylesample_inds = [covered_stylesample_inds; style_i i tmp_labels(i)];
-%         end
-%         for i=non_checkered_inds(1:number_of_samples)
-%             covered_stylesample_inds = [covered_stylesample_inds; style_i i tmp_labels(i)];
-%         end
-%     end
-% %     covered_stylesample_inds = [covered_stylesample_inds; style_i index(end) tmp_labels(end); style_i index(1) tmp_labels(1)];
-% %     covered_stylesample_inds = [covered_stylesample_inds; style_i index(end) tmp_labels(end); style_i index(end-1) tmp_labels(end-1); style_i index(2) tmp_labels(2); style_i index(1) tmp_labels(1)];
-% end
-% 
-% %%
-% features = hdf5read('features_preppycheckered_covered.h5', '/features');
-% features = squeeze(features);
-% features = double(features');
-% info = hdf5read('features_preppycheckered_covered.h5', '/info');
-% info = info';
-% patch_features = cell(size(info, 1), 1);
-% for i=1:size(info, 1)
-%     patch_features{i}.features = features(i, :);
-%     patch_features{i}.coord = info(i, 2:3);
-%     patch_features{i}.id = num2str(info(i, 1));
-% end
-% 
-% %%
-% counters = zeros(size(patch_features, 1), 1);
-% for i=1:size(patch_features, 1)
-%     counters(i) = str2double(patch_features{i}.id);
-% end
-% unique(counters)
-% % sum(counters == 16683)
+if ~exist('features')
+    %load features_stylenet.mat
+    load sets_p.mat
+    features = hdf5read('features_preppycheckered.h5', '/features');
+    features = double(features');
+    sets_p{3}.train.features = features;
+    sets_p{3}.test = sets_p{3}.train;
+end
+
+train_perc = 0.9;
+delta = 0.2;
+names = {'Preppy'};
+
+sets = sets_p(3);
+
+%% train models
+models = cell(length(names), 1);
+for i=1:length(names)
+    names{i}
+    % [normalized_style_train_features, ~, ~] = normalize_features_fn(sets{i}.train.features, train_feature_avgs, train_feature_stds);
+    C = train(sets{i}.train.labels, sparse(sets{i}.train.features), '-s 0 -C -v 5');
+    models{i} = train(sets{i}.train.labels(3:end), sparse(sets{i}.train.features(3:end, :)), ['-s 0 -c ', num2str(C(1)), '']);
+end
+
+%%
+covered_list = [];
+covered_stylesample_inds = [];
+number_of_samples = -1; %n or -1
+for style_i=1:length(names)
+    tmp_testset = sets{style_i}.test.samples;
+    tmp_labels = sets{style_i}.test.labels;
+    checkered_inds = find(tmp_labels == 1)';
+    non_checkered_inds = find(tmp_labels == 2)';
+%     covered_list = [covered_list; tmp_testset(1).id; tmp_testset(end).id];
+%     covered_list = [covered_list; tmp_testset(1).id; tmp_testset(2).id; tmp_testset(end - 1).id; tmp_testset(end).id];
+    if number_of_samples < 0
+        covered_list = [covered_list; [tmp_testset(:).id]'];
+        covered_stylesample_inds = [covered_stylesample_inds; [ones(size(tmp_labels,1), 1).*style_i [1:size(tmp_testset, 1)]' tmp_labels]];
+    else
+        for i=checkered_inds(1:number_of_samples)
+            covered_list = [covered_list; tmp_testset(i).id];
+        end
+        for i=non_checkered_inds(1:number_of_samples)
+            covered_list = [covered_list; tmp_testset(i).id];
+        end
+        for i=checkered_inds(1:number_of_samples)
+            covered_stylesample_inds = [covered_stylesample_inds; style_i i tmp_labels(i)];
+        end
+        for i=non_checkered_inds(1:number_of_samples)
+            covered_stylesample_inds = [covered_stylesample_inds; style_i i tmp_labels(i)];
+        end
+    end
+%     covered_stylesample_inds = [covered_stylesample_inds; style_i index(end) tmp_labels(end); style_i index(1) tmp_labels(1)];
+%     covered_stylesample_inds = [covered_stylesample_inds; style_i index(end) tmp_labels(end); style_i index(end-1) tmp_labels(end-1); style_i index(2) tmp_labels(2); style_i index(1) tmp_labels(1)];
+end
+
+%%
+features = hdf5read('features_preppycheckered_covered.h5', '/features');
+features = squeeze(features);
+features = double(features');
+info = hdf5read('features_preppycheckered_covered.h5', '/info');
+info = info';
+patch_features = cell(size(info, 1), 1);
+for i=1:size(info, 1)
+    patch_features{i}.features = features(i, :);
+    patch_features{i}.coord = info(i, 2:3);
+    patch_features{i}.id = num2str(info(i, 1));
+end
+
+%%
+counters = zeros(size(patch_features, 1), 1);
+for i=1:size(patch_features, 1)
+    counters(i) = str2double(patch_features{i}.id);
+end
+unique(counters)
+% sum(counters == 16683)
 
 
 %% 3 pos funziona, 4 e 5 pos non funziona, 6 pos funziona
